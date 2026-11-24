@@ -1,0 +1,399 @@
+---
+/**
+ * 杂志式文章列表（V3 + 悬停展开）
+ * 默认：第一篇展开成大牌；
+ * 悬停任意一条 → 该条展开成大牌，第一篇收回普通行。
+ * 纯 CSS 实现（:has 不用，用 :hover + :not(:hover) 组合）
+ */
+import type { CollectionEntry } from "astro:content";
+import { getPostUrlBySlug } from "@utils/url-utils";
+
+const { page } = Astro.props;
+
+type PostEntry = CollectionEntry<"posts">;
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const fmt = (d: Date) =>
+	`${d.getFullYear()}.${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}`;
+
+const posts = page.data as PostEntry[];
+const total = page.total ?? posts.length;
+---
+
+<section class="ed">
+  <header class="ed-head">
+    <h2>Posts</h2>
+    <span class="ed-count">
+      {pad2(posts.length)} / {pad2(total)}
+    </span>
+  </header>
+
+  {
+    posts.length === 0 ? (
+      <p class="ed-empty">还没有文章。</p>
+    ) : (
+      posts.map((entry, i) => (
+        <a
+          class:list={["ed-row", i === 0 && "is-lead"]}
+          href={getPostUrlBySlug(entry.id)}
+          style={`--i:${i}`}
+        >
+          <span class="ed-num">{pad2(i + 1)}</span>
+
+          <div class="ed-main">
+            <div class="ed-kick">
+              {entry.data.pinned && <span class="ed-pin">置顶</span>}
+              <span>{entry.data.category || "Post"}</span>
+              <span class="sep">·</span>
+              <time>{fmt(entry.data.published)}</time>
+            </div>
+
+            <h3 class="ed-title">{entry.data.title}</h3>
+
+            <div class="ed-exp">
+              {entry.data.description && (
+                <p class="ed-desc">{entry.data.description}</p>
+              )}
+              <div class="ed-foot">
+                <div class="ed-tags">
+                  {(entry.data.tags ?? []).slice(0, 3).map((t) => (
+                    <span class="ed-tag">{t}</span>
+                  ))}
+                </div>
+                <span class="ed-read">阅读 →</span>
+              </div>
+            </div>
+          </div>
+        </a>
+      ))
+    )
+  }
+</section>
+
+<style>
+  .ed {
+    margin-bottom: 8px;
+  }
+  .ed-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-divider);
+  }
+  .ed-head h2 {
+    margin: 0;
+    font-family: "Source Code Pro", ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--content-meta);
+  }
+  .ed-count {
+    font-family: "Source Code Pro", ui-monospace, monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    color: var(--content-meta);
+  }
+
+  /* ---- 行 ---- */
+  .ed-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 0 18px;
+    padding: 22px 22px;
+    border-bottom: 1px solid var(--line-divider);
+    text-decoration: none;
+    isolation: isolate;
+    animation: ed-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--content-delay, 0ms) + var(--i) * 45ms);
+    transition: padding 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
+  }
+
+  /* 展开时的那层渐变底 */
+  .ed-row::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0;
+    background:
+      /* 右上：旧金主光（暖） */
+      radial-gradient(
+        1000px 420px at 96% -10%,
+        color-mix(in oklab, var(--primary) 42%, transparent),
+        transparent 66%
+      ),
+      /* 左下：深紫棕（冷调对冲） */
+      radial-gradient(
+        820px 360px at -4% 116%,
+        rgba(106, 90, 156, 0.34),
+        transparent 66%
+      ),
+      /* 右下角：一点锈红，别让两色太对称 */
+      radial-gradient(
+        340px 170px at 104% 108%,
+        rgba(150, 56, 31, 0.16),
+        transparent 68%
+      );
+    transition: opacity 0.45s ease 0.1s;
+  }
+
+  @keyframes ed-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .ed-num {
+    font-family: "Source Code Pro", ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--content-meta);
+    padding-top: 7px;
+    transition: color 0.3s;
+  }
+  .ed-row:hover .ed-num,
+  .ed-row.is-lead .ed-num {
+    color: var(--primary);
+  }
+
+  .ed-kick {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: "Source Code Pro", ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--content-meta);
+    margin-bottom: 9px;
+  }
+  .ed-kick .sep {
+    opacity: 0.5;
+  }
+  .ed-pin {
+    color: var(--primary);
+    border: 1px solid currentColor;
+    padding: 1px 5px;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    opacity: 0.85;
+  }
+
+  .ed-title {
+    margin: 0;
+    font-family: Georgia, "Songti SC", "Times New Roman", serif;
+    font-weight: 400;
+    font-size: 1.34rem;
+    line-height: 1.26;
+    letter-spacing: 0.005em;
+    color: var(--deep-text);
+    transition: color 0.3s ease 0.1s, font-size 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
+  }
+  .ed-row:hover .ed-title,
+  .ed-row.is-lead .ed-title {
+    color: var(--primary);
+  }
+
+  /* ---- 展开区 ---- */
+  .ed-exp {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition:
+      max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s,
+      opacity 0.4s ease 0.1s,
+      margin-top 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
+    margin-top: 0;
+  }
+
+  .ed-desc {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.72;
+    color: var(--content-meta);
+    max-width: 62ch;
+  }
+
+  .ed-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 14px;
+  }
+  .ed-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .ed-tag {
+    font-family: "Source Code Pro", ui-monospace, monospace;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--primary);
+    opacity: 0.72;
+    border: 1px solid
+      color-mix(in oklab, var(--primary) 32%, transparent);
+    padding: 2px 7px;
+  }
+  .ed-read {
+    font-family: "Source Code Pro", ui-monospace, monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--primary);
+    white-space: nowrap;
+  }
+
+  /* ===== 状态：默认第一篇是展开的 ===== */
+  .ed-row.is-lead {
+    padding: 34px 26px 36px;
+  }
+  .ed-row.is-lead::before {
+    opacity: 1;
+  }
+  .ed-row.is-lead .ed-title {
+    font-size: 2.28rem;
+    line-height: 1.16;
+    letter-spacing: 0.005em;
+  }
+  .ed-row.is-lead .ed-exp {
+    max-height: 260px;
+    opacity: 1;
+    margin-top: 14px;
+  }
+
+  /* ===== 状态：鼠标进入列表后，第一篇（若没被指到）收回 ===== */
+  .ed:hover .ed-row.is-lead:not(:hover) {
+    padding: 22px 22px;
+  }
+  .ed:hover .ed-row.is-lead:not(:hover)::before {
+    opacity: 0;
+  }
+  .ed:hover .ed-row.is-lead:not(:hover) .ed-title {
+    font-size: 1.34rem;
+    color: var(--deep-text);
+  }
+  .ed:hover .ed-row.is-lead:not(:hover) .ed-num {
+    color: var(--content-meta);
+  }
+  .ed:hover .ed-row.is-lead:not(:hover) .ed-exp {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+  }
+
+  /* ===== 状态：悬停哪条，哪条展开 ===== */
+  .ed-row:hover {
+    padding: 34px 26px 36px;
+  }
+  /* 左侧金边：用伪元素做，可以有生长动画 */
+  .ed-row::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--primary);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
+  }
+  .ed-row:hover::after,
+  .ed-row.is-lead::after {
+    transform: scaleY(1);
+  }
+  .ed-row:hover::before {
+    opacity: 1;
+  }
+  .ed-row:hover .ed-title {
+    font-size: 2.28rem;
+    line-height: 1.16;
+  }
+  .ed-row:hover .ed-exp {
+    max-height: 260px;
+    opacity: 1;
+    margin-top: 14px;
+  }
+
+  /* hover intent：停 40ms 就展开 */
+  .ed-row.is-lead,
+  .ed-row:hover {
+    transition: padding 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.04s;
+  }
+  .ed-row.is-lead::before,
+  .ed-row:hover::before {
+    transition: opacity 0.45s ease 0.04s;
+  }
+  .ed-row.is-lead::after,
+  .ed-row:hover::after {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.04s;
+  }
+  .ed-row.is-lead .ed-title,
+  .ed-row:hover .ed-title {
+    transition: color 0.25s ease 0.04s,
+      font-size 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.04s;
+  }
+  .ed-row.is-lead .ed-exp,
+  .ed-row:hover .ed-exp {
+    transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.04s,
+      opacity 0.4s ease 0.04s, margin-top 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.04s;
+  }
+  .ed-empty {
+    padding: 40px 0;
+    font-size: 13px;
+    color: var(--content-meta);
+  }
+
+  /* ---- 触屏/窄屏：不做悬停展开，第一篇固定展开 ---- */
+  @media (hover: none), (max-width: 700px) {
+    .ed-row,
+    .ed-row.is-lead,
+    .ed-row:hover {
+      padding: 18px 6px;
+    }
+    .ed-row::before,
+    .ed-row:hover::before {
+      opacity: 0;
+    }
+    .ed-row.is-lead::before {
+      opacity: 1;
+    }
+    .ed-title,
+    .ed-row:hover .ed-title {
+      font-size: 1.16rem;
+    }
+    .ed-row.is-lead .ed-title {
+      font-size: 1.62rem;
+    }
+    .ed-exp,
+    .ed-row:hover .ed-exp {
+      max-height: 0;
+      opacity: 0;
+      margin-top: 0;
+    }
+    .ed-row.is-lead .ed-exp {
+      max-height: 240px;
+      opacity: 1;
+      margin-top: 12px;
+    }
+    .ed-num {
+      display: none;
+    }
+    .ed-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+  }
+</style>

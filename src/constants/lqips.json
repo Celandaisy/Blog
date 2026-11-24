@@ -1,0 +1,18 @@
+{
+  "src:assets/images/logo/firefly-light.png": "000000000000000000",
+  "src:assets/images/logo/firefly-dark.png": "ffffffffffffffffff",
+  "public:assets/images/sponsor/wechat.png": "d5d5d5dad9d7dbd8cf",
+  "public:assets/images/sponsor/alipay.png": "8ebbde91bedf93c0e0",
+  "public:assets/images/ad/ad1.webp": "a1b8b68a8e918c8f93",
+  "src:assets/images/logo/celandaisy-light.png": "e3e3e1e6e6e4e6d7d4",
+  "src:assets/images/logo/celandaisy-dark.png": "201e1e1d1b1b30201e",
+  "public:assets/projects/teaser.webp": "423314654d1e795c24",
+  "public:assets/projects/tbh-blender.webp": "2a22553c3477473c8a",
+  "public:assets/projects/normal-relight.webp": "4c1f14722a1d872f22",
+  "src:assets/images/MobileWallpaper/celandaisy-dune-mobile.avif": "4838224d3c251b150d",
+  "src:assets/images/DesktopWallpaper/celandaisy-dune.avif": "3f311e55432a2e2416",
+  "src:assets/images/avatar-c.avif": "4339294d412b31291b",
+  "public:assets/pipeline/matrix.png": "1a19151716121b1811",
+  "public:assets/pipeline/layers.png": "1a171314110e16130f",
+  "public:assets/pipeline/flow.png": "18161215120e110f0c"
+}

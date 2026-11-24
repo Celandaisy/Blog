@@ -1,0 +1,39 @@
+---
+// 全屏布局：只有导航 + 内容 + 页脚，没有侧栏 / banner / 网格。
+// 给 /animation 这类全出血页面用。
+// 结构与 MainGridLayout 一致：HeaderTopRow(导航) -> 内容 slot -> Footer
+import Footer from "@components/layout/Footer.astro";
+import HeaderTopRow from "@components/layout/HeaderTopRow.astro";
+import NavMenuPanel from "@components/layout/NavMenuPanel.astro";
+import FloatingControls from "@/components/controls/FloatingControls.astro";
+import { navbarMode, siteConfig } from "@/config";
+import { resolveNavMenuLinks } from "@/utils/nav-menu-utils";
+import Layout from "./Layout.astro";
+
+interface Props {
+	title?: string;
+}
+
+const { title } = Astro.props;
+
+const navbarWidthFull = siteConfig.navbar.widthFull ?? false;
+---
+
+<Layout title={title} hasWallpaper={false}>
+
+<HeaderTopRow navbarMode={navbarMode} navbarWidthFull={navbarWidthFull} />
+
+<!-- 内容直接由页面接管（全出血，不受 #main-grid 约束） -->
+<main id="swup-container" class="transition-main">
+	<h1 class="sr-only">{title}</h1>
+	<slot />
+</main>
+
+<Footer />
+
+<FloatingControls headings={[]} encrypted={false} />
+
+<!-- 移动端导航抽屉 -->
+<NavMenuPanel links={resolveNavMenuLinks()} />
+
+</Layout>
