@@ -1,0 +1,22 @@
+# Cloudflare Pages 读取这个文件（vercel.json 里的 headers 在 CF 不生效）
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+
+# 带 hash 的静态资源，永久缓存
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# 图片和字体，缓存一周
+/assets/*
+  Cache-Control: public, max-age=604800
+
+/favicon/*
+  Cache-Control: public, max-age=604800
+
+# HTML 不缓存（每次拿最新的）
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
